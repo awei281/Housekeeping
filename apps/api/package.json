@@ -6,6 +6,27 @@
     "start:dev": "nest start --watch",
     "build": "nest build",
     "lint": "echo api lint not configured yet",
-    "test": "echo api test not configured yet"
+    "test": "jest",
+    "prisma": "prisma"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/platform-express": "^11.0.1",
+    "@prisma/client": "^6.6.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.15.21",
+    "jest": "^29.7.0",
+    "prisma": "^6.6.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.3"
   }
 }

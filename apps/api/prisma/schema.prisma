@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id           Int       @id @default(autoincrement())
+  source       String
+  contactName  String
+  phone        String
+  serviceType  String
+  expectedTime DateTime?
+  address      String?
+  remark       String?
+  status       String    @default("new")
+  ownerId      Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("leads")
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  phone     String
+  level     String   @default("normal")
+  source    String?
+  tags      String?
+  remark    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("customers")
+}
+
+model Employee {
+  id                 Int       @id @default(autoincrement())
+  name               String
+  phone              String
+  roleType           String
+  skillTags          String?
+  certificateNo      String?
+  healthCertExpireAt DateTime?
+  status             String    @default("available")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@map("employees")
+}
+
+model Order {
+  id                 Int      @id @default(autoincrement())
+  orderNo            String   @unique
+  customerId         Int
+  leadId             Int?
+  serviceItemName    String
+  serviceType        String
+  serviceDate        DateTime
+  amount             Decimal  @db.Decimal(10, 2)
+  status             String   @default("pending_confirm")
+  paymentStatus      String   @default("unpaid")
+  assignedEmployeeId Int?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("orders")
+}
