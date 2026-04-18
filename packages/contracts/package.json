@@ -8,5 +8,8 @@
     "build": "echo contracts build not configured yet",
     "lint": "echo contracts lint not configured yet",
     "test": "echo contracts test not configured yet"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
   }
 }
