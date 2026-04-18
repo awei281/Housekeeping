@@ -76,4 +76,34 @@ describe("Admin auth (e2e)", () => {
         roleCode: "super_admin",
       });
   });
+
+  it("returns public home page content", async () => {
+    const response = await request(app.getHttpServer())
+      .get("/api/public/pages/home")
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      pageKey: "home",
+      title: expect.any(String),
+      lead: expect.any(String),
+      hero: {
+        title: expect.any(String),
+        subtitle: expect.any(String),
+        ctaLabel: expect.any(String),
+        ctaHref: "/contact",
+      },
+    });
+    expect(response.body.sections).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          title: expect.any(String),
+          body: expect.any(String),
+        }),
+      ]),
+    );
+  });
+
+  it("returns 404 for an unknown public page", async () => {
+    await request(app.getHttpServer()).get("/api/public/pages/missing").expect(404);
+  });
 });
