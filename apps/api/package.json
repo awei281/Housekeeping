@@ -1,0 +1,11 @@
+{
+  "name": "api",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "start:dev": "nest start --watch",
+    "build": "nest build",
+    "lint": "echo api lint not configured yet",
+    "test": "echo api test not configured yet"
+  }
+}

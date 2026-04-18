@@ -1,0 +1,11 @@
+{
+  "name": "admin",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "echo admin lint not configured yet",
+    "test": "echo admin test not configured yet"
+  }
+}

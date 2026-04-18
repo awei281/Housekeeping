@@ -1,0 +1,12 @@
+{
+  "name": "contracts",
+  "private": true,
+  "version": "0.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "echo contracts build not configured yet",
+    "lint": "echo contracts lint not configured yet",
+    "test": "echo contracts test not configured yet"
+  }
+}
