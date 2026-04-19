@@ -17,6 +17,15 @@ describe("Admin auth (e2e)", () => {
   const findEmployeesMock = jest.fn();
   const findEmployeeMock = jest.fn();
   const updateEmployeeMock = jest.fn();
+  const findContentPagesMock = jest.fn();
+  const findContentPageMock = jest.fn();
+  const upsertContentPageMock = jest.fn();
+  const findContentBlocksMock = jest.fn();
+  const deleteContentBlocksMock = jest.fn();
+  const createContentBlocksMock = jest.fn();
+  const findServiceStandardsMock = jest.fn();
+  const createServiceStandardMock = jest.fn();
+  const updateServiceStandardMock = jest.fn();
   const createOrderMock = jest.fn();
   const findOrdersMock = jest.fn();
   const findOrderMock = jest.fn();
@@ -50,6 +59,21 @@ describe("Admin auth (e2e)", () => {
           findUnique: findEmployeeMock,
           update: updateEmployeeMock,
         },
+        contentPage: {
+          findMany: findContentPagesMock,
+          findUnique: findContentPageMock,
+          upsert: upsertContentPageMock,
+        },
+        contentBlock: {
+          findMany: findContentBlocksMock,
+          deleteMany: deleteContentBlocksMock,
+          createMany: createContentBlocksMock,
+        },
+        serviceStandard: {
+          findMany: findServiceStandardsMock,
+          create: createServiceStandardMock,
+          update: updateServiceStandardMock,
+        },
         order: {
           create: createOrderMock,
           findMany: findOrdersMock,
@@ -80,10 +104,24 @@ describe("Admin auth (e2e)", () => {
     findEmployeesMock.mockReset();
     findEmployeeMock.mockReset();
     updateEmployeeMock.mockReset();
+    findContentPagesMock.mockReset();
+    findContentPageMock.mockReset();
+    upsertContentPageMock.mockReset();
+    findContentBlocksMock.mockReset();
+    deleteContentBlocksMock.mockReset();
+    createContentBlocksMock.mockReset();
+    findServiceStandardsMock.mockReset();
+    createServiceStandardMock.mockReset();
+    updateServiceStandardMock.mockReset();
     createOrderMock.mockReset();
     findOrdersMock.mockReset();
     findOrderMock.mockReset();
     updateOrderMock.mockReset();
+
+    findContentPagesMock.mockResolvedValue([]);
+    findContentPageMock.mockResolvedValue(null);
+    findContentBlocksMock.mockResolvedValue([]);
+    findServiceStandardsMock.mockResolvedValue([]);
   });
 
   async function loginAsAdmin() {
@@ -173,6 +211,356 @@ describe("Admin auth (e2e)", () => {
 
   it("returns 404 for an unknown public page", async () => {
     await request(app.getHttpServer()).get("/api/public/pages/missing").expect(404);
+  });
+
+  it("returns the authenticated content pages list", async () => {
+    const accessToken = await loginAsAdmin();
+
+    const response = await request(app.getHttpServer())
+      .get("/api/admin/content/pages")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          pageKey: "home",
+          title: expect.any(String),
+        }),
+        expect.objectContaining({
+          pageKey: "contact",
+        }),
+      ]),
+    );
+  });
+
+  it("returns the authenticated editable content page detail", async () => {
+    const accessToken = await loginAsAdmin();
+
+    const response = await request(app.getHttpServer())
+      .get("/api/admin/content/pages/home")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(response.body).toMatchObject({
+      pageKey: "home",
+      title: expect.any(String),
+      lead: expect.any(String),
+      hero: {
+        title: expect.any(String),
+        subtitle: expect.any(String),
+        ctaLabel: expect.any(String),
+        ctaHref: "/contact",
+      },
+      sections: expect.arrayContaining([
+        expect.objectContaining({
+          title: expect.any(String),
+          body: expect.any(String),
+        }),
+      ]),
+    });
+  });
+
+  it("updates an authenticated content page", async () => {
+    upsertContentPageMock.mockResolvedValue({
+      id: 41,
+      pageKey: "home",
+      title: "更新后的首页标题",
+      lead: "更新后的首页导语",
+      status: "published",
+      createdAt: new Date("2026-04-19T08:00:00.000Z"),
+      updatedAt: new Date("2026-04-19T08:10:00.000Z"),
+    });
+    deleteContentBlocksMock.mockResolvedValue({ count: 3 });
+    createContentBlocksMock.mockResolvedValue({ count: 3 });
+    findContentPageMock.mockResolvedValue({
+      id: 41,
+      pageKey: "home",
+      title: "更新后的首页标题",
+      lead: "更新后的首页导语",
+      status: "published",
+      createdAt: new Date("2026-04-19T08:00:00.000Z"),
+      updatedAt: new Date("2026-04-19T08:10:00.000Z"),
+    });
+    findContentBlocksMock.mockResolvedValue([
+      {
+        id: 101,
+        pageId: 41,
+        blockKey: "hero",
+        blockType: "hero",
+        contentJson: JSON.stringify({
+          title: "新的首页主标题",
+          subtitle: "新的首页副标题",
+          ctaLabel: "马上预约",
+          ctaHref: "/contact",
+        }),
+        sortOrder: 0,
+        createdAt: new Date("2026-04-19T08:10:00.000Z"),
+        updatedAt: new Date("2026-04-19T08:10:00.000Z"),
+      },
+      {
+        id: 102,
+        pageId: 41,
+        blockKey: "section-1",
+        blockType: "section",
+        contentJson: JSON.stringify({
+          title: "新的模块一",
+          body: "这是新的模块内容一。",
+        }),
+        sortOrder: 1,
+        createdAt: new Date("2026-04-19T08:10:00.000Z"),
+        updatedAt: new Date("2026-04-19T08:10:00.000Z"),
+      },
+      {
+        id: 103,
+        pageId: 41,
+        blockKey: "section-2",
+        blockType: "section",
+        contentJson: JSON.stringify({
+          title: "新的模块二",
+          body: "这是新的模块内容二。",
+        }),
+        sortOrder: 2,
+        createdAt: new Date("2026-04-19T08:10:00.000Z"),
+        updatedAt: new Date("2026-04-19T08:10:00.000Z"),
+      },
+    ]);
+
+    const accessToken = await loginAsAdmin();
+
+    const response = await request(app.getHttpServer())
+      .put("/api/admin/content/pages/home")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        title: "更新后的首页标题",
+        lead: "更新后的首页导语",
+        status: "published",
+        hero: {
+          title: "新的首页主标题",
+          subtitle: "新的首页副标题",
+          ctaLabel: "马上预约",
+          ctaHref: "/contact",
+        },
+        sections: [
+          {
+            title: "新的模块一",
+            body: "这是新的模块内容一。",
+          },
+          {
+            title: "新的模块二",
+            body: "这是新的模块内容二。",
+          },
+        ],
+      })
+      .expect(200);
+
+    expect(upsertContentPageMock).toHaveBeenCalledWith({
+      where: {
+        pageKey: "home",
+      },
+      create: {
+        pageKey: "home",
+        title: "更新后的首页标题",
+        lead: "更新后的首页导语",
+        status: "published",
+      },
+      update: {
+        title: "更新后的首页标题",
+        lead: "更新后的首页导语",
+        status: "published",
+      },
+    });
+    expect(deleteContentBlocksMock).toHaveBeenCalledWith({
+      where: {
+        pageId: 41,
+      },
+    });
+    expect(createContentBlocksMock).toHaveBeenCalledWith({
+      data: [
+        {
+          pageId: 41,
+          blockKey: "hero",
+          blockType: "hero",
+          contentJson: JSON.stringify({
+            title: "新的首页主标题",
+            subtitle: "新的首页副标题",
+            ctaLabel: "马上预约",
+            ctaHref: "/contact",
+          }),
+          sortOrder: 0,
+        },
+        {
+          pageId: 41,
+          blockKey: "section-1",
+          blockType: "section",
+          contentJson: JSON.stringify({
+            title: "新的模块一",
+            body: "这是新的模块内容一。",
+          }),
+          sortOrder: 1,
+        },
+        {
+          pageId: 41,
+          blockKey: "section-2",
+          blockType: "section",
+          contentJson: JSON.stringify({
+            title: "新的模块二",
+            body: "这是新的模块内容二。",
+          }),
+          sortOrder: 2,
+        },
+      ],
+    });
+    expect(response.body).toMatchObject({
+      pageKey: "home",
+      title: "更新后的首页标题",
+      lead: "更新后的首页导语",
+      hero: {
+        title: "新的首页主标题",
+        ctaHref: "/contact",
+      },
+      sections: [
+        expect.objectContaining({
+          title: "新的模块一",
+        }),
+        expect.objectContaining({
+          title: "新的模块二",
+        }),
+      ],
+    });
+  });
+
+  it("returns the public service standards list", async () => {
+    const response = await request(app.getHttpServer())
+      .get("/api/public/service-standards")
+      .expect(200);
+
+    expect(response.body).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          category: expect.any(String),
+          title: expect.any(String),
+          content: expect.any(String),
+        }),
+      ]),
+    );
+  });
+
+  it("returns the authenticated standards list", async () => {
+    findServiceStandardsMock.mockResolvedValue([
+      {
+        id: 5,
+        category: "personnel",
+        title: "人员标准",
+        content: "实名认证、培训合格、健康证明齐全。",
+        sortOrder: 1,
+        status: "published",
+        createdAt: new Date("2026-04-19T08:00:00.000Z"),
+        updatedAt: new Date("2026-04-19T08:00:00.000Z"),
+      },
+    ]);
+
+    const accessToken = await loginAsAdmin();
+
+    const response = await request(app.getHttpServer())
+      .get("/api/admin/standards")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(findServiceStandardsMock).toHaveBeenCalledWith({
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    });
+    expect(response.body).toEqual([
+      expect.objectContaining({
+        id: 5,
+        category: "personnel",
+        title: "人员标准",
+      }),
+    ]);
+  });
+
+  it("creates an authenticated service standard", async () => {
+    createServiceStandardMock.mockResolvedValue({
+      id: 6,
+      category: "safety",
+      title: "安全标准",
+      content: "入户前后都要确认物品和隐私保护要求。",
+      sortOrder: 2,
+      status: "published",
+      createdAt: new Date("2026-04-19T08:20:00.000Z"),
+      updatedAt: new Date("2026-04-19T08:20:00.000Z"),
+    });
+
+    const accessToken = await loginAsAdmin();
+
+    const response = await request(app.getHttpServer())
+      .post("/api/admin/standards")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        category: "safety",
+        title: "安全标准",
+        content: "入户前后都要确认物品和隐私保护要求。",
+        sortOrder: 2,
+        status: "published",
+      })
+      .expect(201);
+
+    expect(createServiceStandardMock).toHaveBeenCalledWith({
+      data: {
+        category: "safety",
+        title: "安全标准",
+        content: "入户前后都要确认物品和隐私保护要求。",
+        sortOrder: 2,
+        status: "published",
+      },
+    });
+    expect(response.body).toMatchObject({
+      id: 6,
+      category: "safety",
+      title: "安全标准",
+      status: "published",
+    });
+  });
+
+  it("updates an authenticated service standard", async () => {
+    updateServiceStandardMock.mockResolvedValue({
+      id: 6,
+      category: "safety",
+      title: "安全标准",
+      content: "更新后的安全标准内容。",
+      sortOrder: 3,
+      status: "draft",
+      createdAt: new Date("2026-04-19T08:20:00.000Z"),
+      updatedAt: new Date("2026-04-19T08:25:00.000Z"),
+    });
+
+    const accessToken = await loginAsAdmin();
+
+    const response = await request(app.getHttpServer())
+      .patch("/api/admin/standards/6")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        content: "更新后的安全标准内容。",
+        sortOrder: 3,
+        status: "draft",
+      })
+      .expect(200);
+
+    expect(updateServiceStandardMock).toHaveBeenCalledWith({
+      where: {
+        id: 6,
+      },
+      data: {
+        content: "更新后的安全标准内容。",
+        sortOrder: 3,
+        status: "draft",
+      },
+    });
+    expect(response.body).toMatchObject({
+      id: 6,
+      status: "draft",
+      sortOrder: 3,
+    });
   });
 
   it("returns the authenticated leads list", async () => {

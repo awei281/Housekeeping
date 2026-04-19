@@ -1,24 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-
-interface ContentHero {
-  title: string;
-  subtitle: string;
-  ctaLabel: string;
-  ctaHref: string;
-}
-
-interface ContentSection {
-  title: string;
-  body: string;
-}
-
-export interface PublicContentPage {
-  pageKey: string;
-  title: string;
-  lead: string;
-  hero?: ContentHero;
-  sections: ContentSection[];
-}
+import type {
+  AdminEditableContentPage,
+  AdminContentPageSummary,
+  ContentHero,
+  ContentSection,
+  PublicContentPage,
+} from "../../../../../packages/contracts/src/content";
+import { PrismaService } from "../../common/prisma/prisma.service";
+import { UpdateContentPageDto } from "./dto/update-content-page.dto";
 
 const PUBLIC_PAGES: Record<string, PublicContentPage> = {
   home: {
@@ -121,15 +110,194 @@ const PUBLIC_PAGES: Record<string, PublicContentPage> = {
   },
 };
 
+const PAGE_ORDER = ["home", "about", "services", "standards", "contact"];
+
+function clonePage(page: PublicContentPage): PublicContentPage {
+  return JSON.parse(JSON.stringify(page)) as PublicContentPage;
+}
+
+function parseContentJson<T>(value: string): T | null {
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
 @Injectable()
 export class ContentService {
-  findPageByKey(pageKey: string) {
-    const page = PUBLIC_PAGES[pageKey];
+  constructor(private readonly prisma: PrismaService) {}
 
-    if (!page) {
+  private async loadPageBlocks(pageId: number) {
+    return this.prisma.contentBlock.findMany({
+      where: {
+        pageId,
+      },
+      orderBy: {
+        sortOrder: "asc",
+      },
+    });
+  }
+
+  private buildPageFromSource(
+    pageKey: string,
+    dbPage?: {
+      title: string;
+      lead: string;
+      status: string;
+      updatedAt: Date;
+    } | null,
+    blocks?: Array<{
+      blockType: string;
+      contentJson: string;
+    }>,
+  ): AdminEditableContentPage {
+    const fallbackPage = PUBLIC_PAGES[pageKey];
+
+    if (!dbPage && !fallbackPage) {
       throw new NotFoundException(`Page "${pageKey}" not found`);
     }
 
-    return page;
+    const heroBlock = blocks?.find((block) => block.blockType === "hero");
+    const sectionBlocks =
+      blocks
+        ?.filter((block) => block.blockType === "section")
+        .map((block) => parseContentJson<ContentSection>(block.contentJson))
+        .filter((section): section is ContentSection => Boolean(section)) ?? [];
+
+    return {
+      pageKey,
+      title: dbPage?.title ?? fallbackPage.title,
+      lead: dbPage?.lead ?? fallbackPage.lead,
+      hero:
+        parseContentJson<ContentHero>(heroBlock?.contentJson ?? "") ??
+        fallbackPage.hero,
+      sections: sectionBlocks.length > 0 ? sectionBlocks : fallbackPage.sections,
+      status: dbPage?.status ?? "published",
+    };
+  }
+
+  async findPageByKey(pageKey: string) {
+    const page = await this.prisma.contentPage.findUnique({
+      where: {
+        pageKey,
+      },
+    });
+    const blocks = page ? await this.loadPageBlocks(page.id) : [];
+
+    if (!page && !PUBLIC_PAGES[pageKey]) {
+      throw new NotFoundException(`Page "${pageKey}" not found`);
+    }
+
+    const result = this.buildPageFromSource(pageKey, page, blocks);
+
+    return {
+      pageKey: result.pageKey,
+      title: result.title,
+      lead: result.lead,
+      hero: result.hero,
+      sections: result.sections,
+    };
+  }
+
+  async findAllPagesForAdmin(): Promise<AdminContentPageSummary[]> {
+    const pages = await this.prisma.contentPage.findMany({
+      orderBy: {
+        pageKey: "asc",
+      },
+    });
+    const pageMap = new Map(pages.map((page) => [page.pageKey, page]));
+    const pageKeys = [
+      ...PAGE_ORDER,
+      ...pages.map((page) => page.pageKey).filter((pageKey) => !PAGE_ORDER.includes(pageKey)),
+    ];
+
+    return pageKeys.map((pageKey) => {
+      const fallbackPage = PUBLIC_PAGES[pageKey];
+      const page = pageMap.get(pageKey);
+
+      if (!page && !fallbackPage) {
+        return {
+          pageKey,
+          title: pageKey,
+          lead: "",
+          status: "draft",
+          updatedAt: null,
+        };
+      }
+
+      return {
+        pageKey,
+        title: page?.title ?? fallbackPage.title,
+        lead: page?.lead ?? fallbackPage.lead,
+        status: page?.status ?? "published",
+        updatedAt: page?.updatedAt?.toISOString() ?? null,
+      };
+    });
+  }
+
+  async findPageForAdmin(pageKey: string) {
+    const page = await this.prisma.contentPage.findUnique({
+      where: {
+        pageKey,
+      },
+    });
+    const blocks = page ? await this.loadPageBlocks(page.id) : [];
+
+    return this.buildPageFromSource(pageKey, page, blocks);
+  }
+
+  async updatePage(pageKey: string, dto: UpdateContentPageDto) {
+    const page = await this.prisma.contentPage.upsert({
+      where: {
+        pageKey,
+      },
+      create: {
+        pageKey,
+        title: dto.title,
+        lead: dto.lead,
+        status: dto.status ?? "published",
+      },
+      update: {
+        title: dto.title,
+        lead: dto.lead,
+        status: dto.status ?? "published",
+      },
+    });
+
+    await this.prisma.contentBlock.deleteMany({
+      where: {
+        pageId: page.id,
+      },
+    });
+
+    const blocks = [
+      ...(dto.hero
+        ? [
+            {
+              pageId: page.id,
+              blockKey: "hero",
+              blockType: "hero",
+              contentJson: JSON.stringify(dto.hero),
+              sortOrder: 0,
+            },
+          ]
+        : []),
+      ...dto.sections.map((section, index) => ({
+        pageId: page.id,
+        blockKey: `section-${index + 1}`,
+        blockType: "section",
+        contentJson: JSON.stringify(section),
+        sortOrder: index + 1,
+      })),
+    ];
+
+    if (blocks.length > 0) {
+      await this.prisma.contentBlock.createMany({
+        data: blocks,
+      });
+    }
+
+    return this.findPageForAdmin(pageKey);
   }
 }

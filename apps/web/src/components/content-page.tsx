@@ -1,4 +1,4 @@
-import { PublicContentPage } from "../lib/api";
+import type { PublicContentPage } from "../../../../packages/contracts/src/content";
 
 export function ContentPage({ page }: { page: PublicContentPage }) {
   return (

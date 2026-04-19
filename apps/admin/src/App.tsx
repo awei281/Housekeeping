@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Button, Layout, Menu, Space, Typography } from "antd";
+import ContentPagesPage from "./pages/content/pages";
 import CustomersPage from "./pages/customers";
 import EmployeesPage from "./pages/employees";
 import { LoginPage } from "./pages/login";
 import LeadsPage from "./pages/leads";
 import OrdersPage from "./pages/orders";
+import StandardsPage from "./pages/standards";
 import { getStoredSession, logout, type AuthSession } from "./store/auth";
 
 export function App() {
   const [session, setSession] = useState<AuthSession | null>(() => getStoredSession());
   const [activePage, setActivePage] = useState<
-    "leads" | "customers" | "orders" | "employees"
+    "leads" | "customers" | "orders" | "employees" | "content" | "standards"
   >(
     "leads",
   );
@@ -48,9 +50,19 @@ export function App() {
             { key: "customers", label: "客户管理" },
             { key: "orders", label: "订单管理" },
             { key: "employees", label: "员工管理" },
+            { key: "content", label: "内容管理" },
+            { key: "standards", label: "服务标准" },
           ]}
           onClick={({ key }) =>
-            setActivePage(key as "leads" | "customers" | "orders" | "employees")
+            setActivePage(
+              key as
+                | "leads"
+                | "customers"
+                | "orders"
+                | "employees"
+                | "content"
+                | "standards",
+            )
           }
           selectedKeys={[activePage]}
         />
@@ -86,6 +98,8 @@ export function App() {
             ) : null}
             {activePage === "orders" ? <OrdersPage /> : null}
             {activePage === "employees" ? <EmployeesPage /> : null}
+            {activePage === "content" ? <ContentPagesPage /> : null}
+            {activePage === "standards" ? <StandardsPage /> : null}
           </Space>
         </Layout.Content>
       </Layout>

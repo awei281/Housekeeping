@@ -70,3 +70,44 @@ model Order {
 
   @@map("orders")
 }
+
+model ContentPage {
+  id        Int            @id @default(autoincrement())
+  pageKey   String         @unique
+  title     String
+  lead      String
+  status    String         @default("published")
+  blocks    ContentBlock[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@map("content_pages")
+}
+
+model ContentBlock {
+  id         Int         @id @default(autoincrement())
+  pageId     Int
+  page       ContentPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  blockKey   String
+  blockType  String
+  contentJson String     @db.LongText
+  sortOrder  Int         @default(0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([pageId, sortOrder])
+  @@map("content_blocks")
+}
+
+model ServiceStandard {
+  id        Int      @id @default(autoincrement())
+  category  String
+  title     String
+  content   String   @db.Text
+  sortOrder Int      @default(0)
+  status    String   @default("published")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("service_standards")
+}

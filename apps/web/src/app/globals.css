@@ -238,6 +238,16 @@ a {
   font-size: 1.35rem;
 }
 
+.section-eyebrow {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  color: #0f766e;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .appointment-card {
   position: sticky;
   top: 102px;

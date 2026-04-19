@@ -1,4 +1,9 @@
 import type {
+  AdminContentPageSummary,
+  AdminEditableContentPage,
+  UpdateContentPageDto,
+} from "../../../../packages/contracts/src/content";
+import type {
   CreateEmployeeDto,
   UpdateEmployeeDto,
 } from "../../../../packages/contracts/src/employee";
@@ -6,6 +11,11 @@ import type {
   AssignOrderEmployeeDto,
   CreateOrderDto,
 } from "../../../../packages/contracts/src/order";
+import type {
+  CreateServiceStandardDto,
+  ServiceStandardDto,
+  UpdateServiceStandardDto,
+} from "../../../../packages/contracts/src/standard";
 
 export interface AuthUser {
   id: number;
@@ -186,6 +196,50 @@ export function fetchCustomers() {
 
 export function fetchEmployees() {
   return authorizedJsonRequest<AdminEmployee[]>("/api/admin/employees");
+}
+
+export function fetchContentPages() {
+  return authorizedJsonRequest<AdminContentPageSummary[]>("/api/admin/content/pages");
+}
+
+export function fetchContentPage(pageKey: string) {
+  return authorizedJsonRequest<AdminEditableContentPage>(
+    `/api/admin/content/pages/${pageKey}`,
+  );
+}
+
+export function updateContentPage(
+  pageKey: string,
+  payload: UpdateContentPageDto,
+) {
+  return authorizedJsonRequest<AdminEditableContentPage>(
+    `/api/admin/content/pages/${pageKey}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function fetchServiceStandards() {
+  return authorizedJsonRequest<ServiceStandardDto[]>("/api/admin/standards");
+}
+
+export function createServiceStandard(payload: CreateServiceStandardDto) {
+  return authorizedJsonRequest<ServiceStandardDto>("/api/admin/standards", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateServiceStandard(
+  id: number,
+  payload: UpdateServiceStandardDto,
+) {
+  return authorizedJsonRequest<ServiceStandardDto>(`/api/admin/standards/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function createEmployee(payload: CreateEmployeeDto) {

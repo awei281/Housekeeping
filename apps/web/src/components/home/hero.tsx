@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ContentHero } from "../../lib/api";
+import type { ContentHero } from "../../../../../packages/contracts/src/content";
 
 export function Hero({ hero }: { hero: ContentHero }) {
   return (
