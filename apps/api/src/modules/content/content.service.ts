@@ -103,7 +103,7 @@ const PUBLIC_PAGES: Record<string, PublicContentPage> = {
   contact: {
     pageKey: "contact",
     title: "联系我们",
-    lead: "页面先承担留资入口和基础联系方式，预约表单在下一任务打通。",
+    lead: "页面现在承担留资入口和基础联系方式，顾问会根据预约信息尽快回电。",
     sections: [
       {
         title: "顾问咨询",
@@ -112,6 +112,10 @@ const PUBLIC_PAGES: Record<string, PublicContentPage> = {
       {
         title: "预约准备",
         body: "建议提前准备服务类型、期望时间和联系号码，方便后续顾问快速跟进。",
+      },
+      {
+        title: "提交后流程",
+        body: "表单提交后会进入后台线索池，顾问确认需求后再进入后续报价和派单流程。",
       },
     ],
   },

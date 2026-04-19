@@ -10,8 +10,6 @@ import {
   message,
 } from "antd";
 import {
-  clearStoredSession,
-  getStoredSession,
   login,
   type AuthSession,
 } from "../../store/auth";
@@ -38,9 +36,12 @@ const cardStyle: React.CSSProperties = {
   borderRadius: 20,
 };
 
-export function LoginPage() {
+interface LoginPageProps {
+  onLoginSuccess: (session: AuthSession) => void;
+}
+
+export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [api, contextHolder] = message.useMessage();
-  const [session, setSession] = useState<AuthSession | null>(getStoredSession());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,8 +51,8 @@ export function LoginPage() {
 
     try {
       const nextSession = await login(values);
-      setSession(nextSession);
       api.success("登录成功");
+      onLoginSuccess(nextSession);
     } catch (submitError) {
       setError(
         submitError instanceof Error ? submitError.message : "登录失败，请稍后重试",
@@ -59,12 +60,6 @@ export function LoginPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleLogout = () => {
-    clearStoredSession();
-    setSession(null);
-    setError(null);
   };
 
   return (
@@ -81,47 +76,33 @@ export function LoginPage() {
             </Typography.Paragraph>
           </div>
 
-          {session ? (
-            <Space direction="vertical" size={16} style={{ width: "100%" }}>
-              <Alert
-                type="success"
-                message={`已登录为 ${session.user.username}`}
-                description={`角色：${session.user.roleCode}`}
-                showIcon
-              />
-              <Button onClick={handleLogout}>退出登录</Button>
-            </Space>
-          ) : (
-            <>
-              {error ? <Alert type="error" message={error} showIcon /> : null}
-              <Form<LoginFormValues>
-                layout="vertical"
-                initialValues={{
-                  username: "admin",
-                  password: "admin123",
-                }}
-                onFinish={handleSubmit}
-              >
-                <Form.Item
-                  label="账号"
-                  name="username"
-                  rules={[{ required: true, message: "请输入账号" }]}
-                >
-                  <Input autoComplete="username" />
-                </Form.Item>
-                <Form.Item
-                  label="密码"
-                  name="password"
-                  rules={[{ required: true, message: "请输入密码" }]}
-                >
-                  <Input.Password autoComplete="current-password" />
-                </Form.Item>
-                <Button type="primary" htmlType="submit" loading={submitting} block>
-                  登录后台
-                </Button>
-              </Form>
-            </>
-          )}
+          {error ? <Alert type="error" message={error} showIcon /> : null}
+          <Form<LoginFormValues>
+            layout="vertical"
+            initialValues={{
+              username: "admin",
+              password: "admin123",
+            }}
+            onFinish={handleSubmit}
+          >
+            <Form.Item
+              label="账号"
+              name="username"
+              rules={[{ required: true, message: "请输入账号" }]}
+            >
+              <Input autoComplete="username" />
+            </Form.Item>
+            <Form.Item
+              label="密码"
+              name="password"
+              rules={[{ required: true, message: "请输入密码" }]}
+            >
+              <Input.Password autoComplete="current-password" />
+            </Form.Item>
+            <Button type="primary" htmlType="submit" loading={submitting} block>
+              登录后台
+            </Button>
+          </Form>
         </Space>
       </Card>
     </div>

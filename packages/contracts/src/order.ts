@@ -1,9 +1,13 @@
 export interface CreateOrderDto {
   customerId: number;
-  serviceItemId: number;
+  serviceType: string;
+  serviceItemName: string;
   serviceDate: string;
   amount: number;
-  addressId?: number;
   leadId?: number;
   assignedEmployeeId?: number;
+}
+
+export interface AssignOrderEmployeeDto {
+  employeeId: number;
 }

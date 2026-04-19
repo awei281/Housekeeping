@@ -210,6 +210,13 @@ a {
   border-radius: var(--radius-lg);
 }
 
+.contact-layout {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  align-items: start;
+}
+
 .page-heading {
   margin-bottom: 24px;
 }
@@ -231,6 +238,99 @@ a {
   font-size: 1.35rem;
 }
 
+.appointment-card {
+  position: sticky;
+  top: 102px;
+  padding: 30px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow);
+}
+
+.appointment-card__heading {
+  margin-bottom: 20px;
+}
+
+.appointment-card__heading h2 {
+  margin: 14px 0 12px;
+  font-family: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  font-size: clamp(1.8rem, 3vw, 2.3rem);
+}
+
+.appointment-card__heading p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.appointment-form {
+  display: grid;
+  gap: 16px;
+}
+
+.form-field {
+  display: grid;
+  gap: 8px;
+}
+
+.form-field span {
+  font-weight: 700;
+  color: var(--primary-strong);
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  border: 1px solid rgba(32, 51, 58, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--text);
+  padding: 14px 16px;
+  font: inherit;
+}
+
+.form-field textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  outline: 2px solid rgba(30, 107, 111, 0.18);
+  border-color: var(--primary);
+}
+
+.appointment-form__submit {
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+}
+
+.appointment-form__submit:disabled {
+  cursor: progress;
+  opacity: 0.72;
+}
+
+.form-feedback {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  line-height: 1.65;
+}
+
+.form-feedback--success {
+  background: rgba(30, 107, 111, 0.1);
+  color: var(--primary-strong);
+}
+
+.form-feedback--error {
+  background: rgba(190, 74, 46, 0.12);
+  color: #8a331f;
+}
+
 .site-footer {
   border-top: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.45);
@@ -248,6 +348,14 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .contact-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .appointment-card {
+    position: static;
+  }
+
   .sections-grid {
     grid-template-columns: 1fr;
   }
@@ -263,7 +371,8 @@ a {
   }
 
   .hero__copy,
-  .content-card {
+  .content-card,
+  .appointment-card {
     padding: 28px 22px;
   }
 
