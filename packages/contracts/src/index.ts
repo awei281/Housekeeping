@@ -1,3 +1,4 @@
+export * from "./dashboard";
 export * from "./content";
 export * from "./enums";
 export * from "./employee";

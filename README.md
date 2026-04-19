@@ -7,10 +7,13 @@ The current branch already covers the first business loop:
 - Public website with `home / about / services / standards / contact`
 - `/contact` appointment form, submitted through Next.js proxy to the API
 - Admin login
+- Admin dashboard summary cards
 - Lead list and lead-to-customer conversion
 - Customer list
 - Order creation, list, detail, and employee assignment
 - Employee basic profile management
+- CMS-backed content page management
+- Service standards management
 
 ## Repository Layout
 
@@ -23,14 +26,13 @@ The current branch already covers the first business loop:
 
 Completed in the current feature line:
 
-- Task 1 to Task 8
+- Task 1 to Task 10
 - Website lead capture is connected to the real `leads` table
 - Admin business flow is connected end-to-end:
   `lead -> customer -> order -> employee -> assignment`
-
-Next planned task:
-
-- Task 9, content management and service standards management
+- Admin can maintain public page content and service standards
+- Admin dashboard can show summary cards for leads and orders
+- Basic deployment scaffolds are present in `docker-compose.yml` and `deploy/nginx.conf`
 
 ## Local Prerequisites
 
@@ -61,6 +63,13 @@ If the container already exists, start it with:
 docker start housekeeping-mysql-4306
 ```
 
+Or use the repository scaffold:
+
+```powershell
+$env:MYSQL_HOST_PORT = '4306'
+docker compose up -d mysql
+```
+
 ## Environment Notes
 
 The apps do not automatically share one root `.env` file. In local development, the most reliable way is to export the required variables in the shell before starting each app.
@@ -83,6 +92,12 @@ Relevant env usage in code:
 - Web server components read `NEXT_PUBLIC_API_URL`
 - Web appointment proxy reads `API_BASE_URL` or `NEXT_PUBLIC_API_URL`
 - Admin reads `VITE_API_BASE_URL`
+
+For the current local Docker setup, a working API database URL is:
+
+```powershell
+$env:DATABASE_URL = 'mysql://root:root@127.0.0.1:4306/housekeeping'
+```
 
 ## Install Dependencies
 
@@ -121,17 +136,21 @@ Default local URLs:
 These commands have been run successfully on the current implementation:
 
 ```powershell
+corepack pnpm lint
+corepack pnpm test
+corepack pnpm build
 corepack pnpm --filter contracts exec tsc --noEmit
 corepack pnpm --filter api test
 corepack pnpm --filter api build
 corepack pnpm --filter admin build
 corepack pnpm --filter web build
+docker compose config
 ```
 
 Note about `web build`:
 
-- If the API on `127.0.0.1:3200` is not running, Next.js may print `fetch failed`
-- The public site still builds because `apps/web/src/lib/api.ts` contains fallback page content
+- `apps/web/src/lib/api.ts` now uses `cache: "no-store"` for content and standards data
+- That keeps `/standards` aligned with fresh CMS updates instead of serving a cached 5-minute snapshot
 
 ## Real Runtime Flow Already Verified
 
@@ -139,11 +158,26 @@ The following runtime flow has already been exercised against the local Docker M
 
 1. Submit a public lead
 2. Login as admin
-3. Convert the lead into a customer
-4. Create an order
-5. Create an employee
-6. Assign the employee to the order
-7. Read back the order detail with assigned employee info
+3. Read dashboard summary
+4. Convert the lead into a customer
+5. Create an order
+6. Create an employee
+7. Assign the employee to the order
+8. Update the `standards` content page
+9. Create and update a service standard
+10. Read back the public `/standards` page with the latest CMS content
+
+## Deployment Scaffold
+
+This repository now includes two basic deployment scaffolds:
+
+- `docker-compose.yml`: starts MySQL with a safe default host port of `4306`
+- `deploy/nginx.conf`: reverse proxy scaffold
+  - public web on port `80`
+  - admin console on port `8080`
+  - API proxied through `/api/`
+
+The nginx file is still a scaffold, not a production-hardened config. It is intended to give the next deployment step a concrete starting point rather than leave deployment completely blank.
 
 ## Root Scripts
 

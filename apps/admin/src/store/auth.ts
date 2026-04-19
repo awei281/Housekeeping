@@ -3,6 +3,7 @@ import type {
   AdminEditableContentPage,
   UpdateContentPageDto,
 } from "../../../../packages/contracts/src/content";
+import type { DashboardSummaryDto } from "../../../../packages/contracts/src/dashboard";
 import type {
   CreateEmployeeDto,
   UpdateEmployeeDto,
@@ -182,6 +183,10 @@ export function logout() {
 
 export function fetchLeads() {
   return authorizedJsonRequest<AdminLead[]>("/api/admin/leads");
+}
+
+export function fetchDashboardSummary() {
+  return authorizedJsonRequest<DashboardSummaryDto>("/api/admin/dashboard/summary");
 }
 
 export function convertLeadToCustomer(id: number) {

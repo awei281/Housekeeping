@@ -6,6 +6,7 @@ import { PrismaService } from "../src/common/prisma/prisma.service";
 
 describe("Admin auth (e2e)", () => {
   let app: INestApplication;
+  const countLeadsMock = jest.fn();
   const createLeadMock = jest.fn();
   const findLeadsMock = jest.fn();
   const findLeadMock = jest.fn();
@@ -26,6 +27,7 @@ describe("Admin auth (e2e)", () => {
   const findServiceStandardsMock = jest.fn();
   const createServiceStandardMock = jest.fn();
   const updateServiceStandardMock = jest.fn();
+  const countOrdersMock = jest.fn();
   const createOrderMock = jest.fn();
   const findOrdersMock = jest.fn();
   const findOrderMock = jest.fn();
@@ -43,6 +45,7 @@ describe("Admin auth (e2e)", () => {
       .useValue({
         $connect: jest.fn(),
         lead: {
+          count: countLeadsMock,
           create: createLeadMock,
           findMany: findLeadsMock,
           findUnique: findLeadMock,
@@ -75,6 +78,7 @@ describe("Admin auth (e2e)", () => {
           update: updateServiceStandardMock,
         },
         order: {
+          count: countOrdersMock,
           create: createOrderMock,
           findMany: findOrdersMock,
           findUnique: findOrderMock,
@@ -93,6 +97,7 @@ describe("Admin auth (e2e)", () => {
   });
 
   beforeEach(() => {
+    countLeadsMock.mockReset();
     createLeadMock.mockReset();
     findLeadsMock.mockReset();
     findLeadMock.mockReset();
@@ -113,15 +118,18 @@ describe("Admin auth (e2e)", () => {
     findServiceStandardsMock.mockReset();
     createServiceStandardMock.mockReset();
     updateServiceStandardMock.mockReset();
+    countOrdersMock.mockReset();
     createOrderMock.mockReset();
     findOrdersMock.mockReset();
     findOrderMock.mockReset();
     updateOrderMock.mockReset();
 
+    countLeadsMock.mockResolvedValue(0);
     findContentPagesMock.mockResolvedValue([]);
     findContentPageMock.mockResolvedValue(null);
     findContentBlocksMock.mockResolvedValue([]);
     findServiceStandardsMock.mockResolvedValue([]);
+    countOrdersMock.mockResolvedValue(0);
   });
 
   async function loginAsAdmin() {
@@ -181,6 +189,57 @@ describe("Admin auth (e2e)", () => {
         username: "admin",
         roleCode: "super_admin",
       });
+  });
+
+  it("returns the authenticated dashboard summary", async () => {
+    countLeadsMock.mockResolvedValueOnce(3).mockResolvedValueOnce(7);
+    countOrdersMock.mockResolvedValueOnce(4).mockResolvedValueOnce(5);
+
+    const accessToken = await loginAsAdmin();
+
+    const response = await request(app.getHttpServer())
+      .get("/api/admin/dashboard/summary")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(countLeadsMock).toHaveBeenNthCalledWith(1, {
+      where: {
+        createdAt: {
+          gte: expect.any(Date),
+        },
+      },
+    });
+    expect(countLeadsMock).toHaveBeenNthCalledWith(2, {
+      where: {
+        status: {
+          in: ["new", "following", "quoted"],
+        },
+      },
+    });
+    expect(countOrdersMock).toHaveBeenNthCalledWith(1, {
+      where: {
+        status: {
+          in: [
+            "pending_confirm",
+            "pending_assign",
+            "assigned",
+            "serving",
+            "after_sale",
+          ],
+        },
+      },
+    });
+    expect(countOrdersMock).toHaveBeenNthCalledWith(2, {
+      where: {
+        status: "completed",
+      },
+    });
+    expect(response.body).toEqual({
+      todayLeads: 3,
+      pendingLeads: 7,
+      activeOrders: 4,
+      completedOrders: 5,
+    });
   });
 
   it("returns public home page content", async () => {

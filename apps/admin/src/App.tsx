@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Layout, Menu, Space, Typography } from "antd";
+import DashboardPage from "./pages/dashboard";
 import ContentPagesPage from "./pages/content/pages";
 import CustomersPage from "./pages/customers";
 import EmployeesPage from "./pages/employees";
@@ -12,9 +13,15 @@ import { getStoredSession, logout, type AuthSession } from "./store/auth";
 export function App() {
   const [session, setSession] = useState<AuthSession | null>(() => getStoredSession());
   const [activePage, setActivePage] = useState<
-    "leads" | "customers" | "orders" | "employees" | "content" | "standards"
+    | "dashboard"
+    | "leads"
+    | "customers"
+    | "orders"
+    | "employees"
+    | "content"
+    | "standards"
   >(
-    "leads",
+    "dashboard",
   );
   const [customersRefreshToken, setCustomersRefreshToken] = useState(0);
 
@@ -25,7 +32,7 @@ export function App() {
   function handleLogout() {
     logout();
     setSession(null);
-    setActivePage("leads");
+    setActivePage("dashboard");
   }
 
   function handleCustomerCreated() {
@@ -46,6 +53,7 @@ export function App() {
         </div>
         <Menu
           items={[
+            { key: "dashboard", label: "工作台" },
             { key: "leads", label: "线索管理" },
             { key: "customers", label: "客户管理" },
             { key: "orders", label: "订单管理" },
@@ -56,6 +64,7 @@ export function App() {
           onClick={({ key }) =>
             setActivePage(
               key as
+                | "dashboard"
                 | "leads"
                 | "customers"
                 | "orders"
@@ -90,6 +99,7 @@ export function App() {
 
         <Layout.Content style={{ padding: 24 }}>
           <Space direction="vertical" size={16} style={{ width: "100%" }}>
+            {activePage === "dashboard" ? <DashboardPage /> : null}
             {activePage === "leads" ? (
               <LeadsPage onCustomerCreated={handleCustomerCreated} />
             ) : null}
